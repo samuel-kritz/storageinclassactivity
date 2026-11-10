@@ -1,6 +1,5 @@
 package com.example.networkapp
 
-import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
@@ -8,10 +7,8 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.JsonObjectRequest
-import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.squareup.picasso.Picasso
 import org.json.JSONObject
@@ -49,12 +46,14 @@ class MainActivity : AppCompatActivity() {
         showButton = findViewById<Button>(R.id.showComicButton)
         comicImageView = findViewById<ImageView>(R.id.comicImageView)
 
-        if (file.exists()) {
-            val savedComic = JSONObject(file.readText())
-            titleTextView.text = savedComic.getString("title")
-            descriptionTextView.text = savedComic.getString("alt")
-            Picasso.get().load(savedComic.getString("img")).into(comicImageView)
-        }
+        try {
+            if (file.exists()) {
+                val savedComic = JSONObject(file.readText())
+                titleTextView.text = savedComic.getString("title")
+                descriptionTextView.text = savedComic.getString("alt")
+                Picasso.get().load(savedComic.getString("img")).into(comicImageView)
+            }
+        } catch (e: Exception) { e.printStackTrace() }
 
         showButton.setOnClickListener {
             downloadComic(numberEditText.text.toString())
@@ -90,9 +89,11 @@ class MainActivity : AppCompatActivity() {
     // Implement this function
     private fun saveComic(comicObject: JSONObject) {
 
-        val outputStream = FileOutputStream(file)
-        outputStream.write(comicObject.toString().toByteArray())
-        outputStream.close()
+        try {
+            val outputStream = FileOutputStream(file)
+            outputStream.write(comicObject.toString().toByteArray())
+            outputStream.close()
+        } catch (e: Exception) { e.printStackTrace() }
     }
 
 
