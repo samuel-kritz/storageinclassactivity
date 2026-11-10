@@ -49,9 +49,7 @@ class MainActivity : AppCompatActivity() {
         try {
             if (file.exists()) {
                 val savedComic = JSONObject(file.readText())
-                titleTextView.text = savedComic.getString("title")
-                descriptionTextView.text = savedComic.getString("alt")
-                Picasso.get().load(savedComic.getString("img")).into(comicImageView)
+                showComic(savedComic)
             }
         } catch (e: Exception) { e.printStackTrace() }
 
@@ -65,9 +63,12 @@ class MainActivity : AppCompatActivity() {
     private fun downloadComic (comicId: String) {
         val url = "https://xkcd.com/$comicId/info.0.json"
         requestQueue.add (
-            JsonObjectRequest(url
-                , {showComic(it)}
-                , { error ->
+            JsonObjectRequest(url,
+                {
+                    showComic(it)
+                    saveComic(it)
+                },
+                { error ->
                     Toast.makeText(
                         this,
                         "Search failed: ${error.message}",
@@ -82,13 +83,10 @@ class MainActivity : AppCompatActivity() {
         titleTextView.text = comicObject.getString("title")
         descriptionTextView.text = comicObject.getString("alt")
         Picasso.get().load(comicObject.getString("img")).into(comicImageView)
-
-        saveComic(comicObject)
     }
 
     // Implement this function
     private fun saveComic(comicObject: JSONObject) {
-
         try {
             val outputStream = FileOutputStream(file)
             outputStream.write(comicObject.toString().toByteArray())
