@@ -1,5 +1,6 @@
 package com.example.networkapp
 
+import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
@@ -14,6 +15,8 @@ import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.squareup.picasso.Picasso
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
 
 // TODO (1: Fix any bugs)
 // TODO (2: Add function saveComic(...) to save comic info when downloaded
@@ -28,9 +31,15 @@ class MainActivity : AppCompatActivity() {
     lateinit var showButton: Button
     lateinit var comicImageView: ImageView
 
+    private val internalFilename = "my_file"
+    private lateinit var file: File
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        file = File(filesDir, internalFilename)
 
         requestQueue = Volley.newRequestQueue(this)
 
@@ -39,6 +48,13 @@ class MainActivity : AppCompatActivity() {
         numberEditText = findViewById<EditText>(R.id.comicNumberEditText)
         showButton = findViewById<Button>(R.id.showComicButton)
         comicImageView = findViewById<ImageView>(R.id.comicImageView)
+
+        if (file.exists()) {
+            val savedComic = JSONObject(file.readText())
+            titleTextView.text = savedComic.getString("title")
+            descriptionTextView.text = savedComic.getString("alt")
+            Picasso.get().load(savedComic.getString("img")).into(comicImageView)
+        }
 
         showButton.setOnClickListener {
             downloadComic(numberEditText.text.toString())
@@ -52,7 +68,12 @@ class MainActivity : AppCompatActivity() {
         requestQueue.add (
             JsonObjectRequest(url
                 , {showComic(it)}
-                , {}
+                , { error ->
+                    Toast.makeText(
+                        this,
+                        "Search failed: ${error.message}",
+                        Toast.LENGTH_LONG).show()
+                }
             )
         )
     }
@@ -62,11 +83,16 @@ class MainActivity : AppCompatActivity() {
         titleTextView.text = comicObject.getString("title")
         descriptionTextView.text = comicObject.getString("alt")
         Picasso.get().load(comicObject.getString("img")).into(comicImageView)
+
+        saveComic(comicObject)
     }
 
     // Implement this function
     private fun saveComic(comicObject: JSONObject) {
 
+        val outputStream = FileOutputStream(file)
+        outputStream.write(comicObject.toString().toByteArray())
+        outputStream.close()
     }
 
 
